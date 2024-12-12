@@ -265,6 +265,10 @@ void AC_AttitudeControl::input_quaternion(Quaternion& attitude_desired_quat, Vec
     attitude_controller_run_quat();
 }
 
+/*2024/2/2-------------------------*/
+int od_pcd;
+/*2024/2/2-------------------------*/
+
 // Command an euler roll and pitch angle and an euler yaw rate with angular velocity feedforward and smoothing
 void AC_AttitudeControl::input_euler_angle_roll_pitch_euler_rate_yaw(float euler_roll_angle_cd, float euler_pitch_angle_cd, float euler_yaw_rate_cds)
 {
@@ -272,6 +276,18 @@ void AC_AttitudeControl::input_euler_angle_roll_pitch_euler_rate_yaw(float euler
     float euler_roll_angle = radians(euler_roll_angle_cd * 0.01f);
     float euler_pitch_angle = radians(euler_pitch_angle_cd * 0.01f);
     float euler_yaw_rate = radians(euler_yaw_rate_cds * 0.01f);
+
+/*2024/2/2-------------------------*/
+    if (RC_Channels::get_radio_in(CH_10) > 1300) {
+
+        if(euler_pitch_angle < 0.0){
+            od_pcd = euler_pitch_angle_cd;
+            euler_pitch_angle = 0.0f;
+        } else {
+            od_pcd = 0;
+        }
+    } 
+/*2024/2/2-------------------------*/
 
     // calculate the attitude target euler angles
     _attitude_target.to_euler(_euler_angle_target);
@@ -323,6 +339,18 @@ void AC_AttitudeControl::input_euler_angle_roll_pitch_yaw(float euler_roll_angle
     float euler_roll_angle = radians(euler_roll_angle_cd * 0.01f);
     float euler_pitch_angle = radians(euler_pitch_angle_cd * 0.01f);
     float euler_yaw_angle = radians(euler_yaw_angle_cd * 0.01f);
+
+/*2024/2/2-------------------------*/
+    if (RC_Channels::get_radio_in(CH_10) > 1300) {
+
+        if(euler_pitch_angle < 0.0){
+            od_pcd = euler_pitch_angle_cd;
+            euler_pitch_angle = 0.0f;
+        } else {
+            od_pcd = 0;
+        }
+    } 
+/*2024/2/2-------------------------*/
 
     // calculate the attitude target euler angles
     _attitude_target.to_euler(_euler_angle_target);

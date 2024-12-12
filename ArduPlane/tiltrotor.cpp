@@ -510,6 +510,16 @@ bool Tiltrotor::fully_up(void) const
     return (current_tilt <= 0);
 }
 
+/*----------------------------------------2024/2/3-----*/
+extern int od_pcd;
+
+float T_Gain = float(RC_Channels::get_radio_in(CH_9) - 1100);
+if (T_Gain < 0.0)
+    T_Gain = 0.0;
+T_Gain = T_Gain / 2000.0 + 0.1; 
+float rear_od_pcd = -od_pcd * T_Gain;
+/*-----2024/4/21 T_Gainに関する記述の追加-----*/
+/*----------------------------------------2024/2/3-----*/
 /*
   control vectoring for tilt multicopters
  */
@@ -538,7 +548,7 @@ void Tiltrotor::vectoring(void)
 
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft,  1000 * constrain_float(base_output + yaw_out * yaw_range,0,1));
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, 1000 * constrain_float(base_output - yaw_out * yaw_range,0,1));
-                SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRear,  1000 * constrain_float(base_output,0,1));
+                SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRear,  1000 * constrain_float(base_output,0,1) + rear_od_pcd);
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRearLeft,  1000 * constrain_float(base_output + yaw_out * yaw_range,0,1));
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRearRight, 1000 * constrain_float(base_output - yaw_out * yaw_range,0,1));
             } else {
@@ -555,7 +565,7 @@ void Tiltrotor::vectoring(void)
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight,1000 * constrain_float(base_output - left,0,1));
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRearLeft,1000 * constrain_float(base_output + left,0,1));
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRearRight,1000 * constrain_float(base_output + right,0,1));
-                SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRear,  1000 * constrain_float(base_output + mid,0,1));
+                SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRear,  1000 * constrain_float(base_output + mid,0,1) + rear_od_pcd);
             }
         }
         return;
