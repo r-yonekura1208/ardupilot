@@ -525,7 +525,7 @@ void Tiltrotor::vectoring(void)
 /*----------------------------------------2024/2/3-----*/
 extern int od_pcd;
 
-float T_Gain = float(RC_Channels::get_radio_in(CH_9) - 1100);
+float T_Gain = float(RC_Channels::get_radio_in(CH_7) - 1100);
 if (T_Gain < 0.0)
     T_Gain = 0.0;
 T_Gain = T_Gain / 2000.0 + 0.1;

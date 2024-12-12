@@ -278,7 +278,7 @@ void AC_AttitudeControl::input_euler_angle_roll_pitch_euler_rate_yaw(float euler
     float euler_yaw_rate = radians(euler_yaw_rate_cds * 0.01f);
 
 /*2024/2/2-------------------------*/
-    if (RC_Channels::get_radio_in(CH_10) > 1300) {
+    if (RC_Channels::get_radio_in(CH_7) > 1300) {
 
         if(euler_pitch_angle < 0.0){
             od_pcd = euler_pitch_angle_cd;
@@ -341,7 +341,7 @@ void AC_AttitudeControl::input_euler_angle_roll_pitch_yaw(float euler_roll_angle
     float euler_yaw_angle = radians(euler_yaw_angle_cd * 0.01f);
 
 /*2024/2/2-------------------------*/
-    if (RC_Channels::get_radio_in(CH_10) > 1300) {
+    if (RC_Channels::get_radio_in(CH_7) > 1300) {
 
         if(euler_pitch_angle < 0.0){
             od_pcd = euler_pitch_angle_cd;
