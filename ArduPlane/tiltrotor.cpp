@@ -184,13 +184,37 @@ float Tiltrotor::tilt_max_change(bool up, bool in_flap_range) const
  */
 void Tiltrotor::slew(float newtilt)
 {
-    float max_change = tilt_max_change(newtilt<current_tilt, newtilt > get_fully_forward_tilt());
-    current_tilt = constrain_float(newtilt, current_tilt-max_change, current_tilt+max_change);
+    // VTOLモードでのみゲインを適用
+    if (quadplane.in_vtol_mode()) {
+        extern int od_pcd;
+        // 新しいティルト角度にゲインを加算
+        newtilt += -od_pcd;
+        // 最大角度を15度に制限（ティルト角度は0～1に正規化されていると仮定）
+        // 6CHの入力値を使用して最大角度を設定
+        float ch6_input = RC_Channels::get_radio_in(CH_6); // 6CHの入力値を取得（例: 1000～2000）
+        ch6_input = constrain_float(ch6_input, 1000, 2000); // 入力範囲を制限
+        float max_angle = 10.0f + (ch6_input - 1000) * 10.0f / 1000.0f; // 10度～20度にスケーリング
+        const float max_tilt = max_angle / 90.0f; // 正規化（0～1）
+        // ティルト角度を最大角度に制限
+        newtilt = constrain_float(newtilt, 0.0f, max_tilt);
+        // ティルト角度の最大変化量を計算
+        // 変化量を増やすために制限値を調整
+        float max_change = tilt_max_change(newtilt < current_tilt, newtilt > get_fully_forward_tilt()) * 3.0f; // 3倍速
+        // 角度をスルー制限内に収める
+        current_tilt = constrain_float(newtilt, current_tilt - max_change, current_tilt + max_change);
+        // 目標角度への到達を判定
+        angle_achieved = is_equal(newtilt, current_tilt);
+        // 角度をスケール変換して出力
+        SRV_Channels::set_output_scaled(SRV_Channel::k_motor_tilt, 1000 * current_tilt);
+    } else {
+        float max_change = tilt_max_change(newtilt<current_tilt, newtilt > get_fully_forward_tilt());
+        current_tilt = constrain_float(newtilt, current_tilt-max_change, current_tilt+max_change);
 
-    angle_achieved = is_equal(newtilt, current_tilt);
+        angle_achieved = is_equal(newtilt, current_tilt);
 
-    // translate to 0..1000 range and output
-    SRV_Channels::set_output_scaled(SRV_Channel::k_motor_tilt, 1000 * current_tilt);
+        // translate to 0..1000 range and output
+        SRV_Channels::set_output_scaled(SRV_Channel::k_motor_tilt, 1000 * current_tilt);
+    }
 }
 
 // return the current tilt value that represents forward flight
@@ -522,16 +546,16 @@ void Tiltrotor::vectoring(void)
     const float fixed_tilt_limit = fixed_angle / total_angle;
     const float level_out = 1.0 - fixed_tilt_limit;
 
-/*----------------------------------------2024/2/3-----*/
-extern int od_pcd;
+    /*----------------------------------------2024/2/3-----
+    extern int od_pcd;
 
-float T_Gain = float(RC_Channels::get_radio_in(CH_7) - 1100);
-if (T_Gain < 0.0)
-    T_Gain = 0.0;
-T_Gain = T_Gain / 2000.0 + 0.1;
-float rear_od_pcd = -od_pcd * T_Gain;
-/*-----2024/4/21 T_Gainに関する記述の追加-----*/
-/*----------------------------------------2024/2/3-----*/
+    float T_Gain = float(RC_Channels::get_radio_in(CH_7) - 1100);
+    if (T_Gain < 0.0)
+        T_Gain = 0.0;
+    T_Gain = T_Gain / 2000.0 + 0.1;
+    float rear_od_pcd = -od_pcd * T_Gain;
+    -----2024/4/21 T_Gainに関する記述の追加-----
+    ---------------------------------------2024/2/3-----*/
 
     // calculate the basic tilt amount from current_tilt
     float base_output = zero_out + (current_tilt * (level_out - zero_out));
@@ -549,7 +573,7 @@ float rear_od_pcd = -od_pcd * T_Gain;
 
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft,  1000 * constrain_float(base_output + yaw_out * yaw_range,0,1));
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, 1000 * constrain_float(base_output - yaw_out * yaw_range,0,1));
-                SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRear,  1000 * constrain_float(base_output,0,1) + rear_od_pcd);
+                SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRear,  1000 * constrain_float(base_output,0,1));
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRearLeft,  1000 * constrain_float(base_output + yaw_out * yaw_range,0,1));
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRearRight, 1000 * constrain_float(base_output - yaw_out * yaw_range,0,1));
             } else {
@@ -566,7 +590,7 @@ float rear_od_pcd = -od_pcd * T_Gain;
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight,1000 * constrain_float(base_output - left,0,1));
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRearLeft,1000 * constrain_float(base_output + left,0,1));
                 SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRearRight,1000 * constrain_float(base_output + right,0,1));
-                SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRear,  1000 * constrain_float(base_output + mid,0,1) + rear_od_pcd);
+                SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRear,  1000 * constrain_float(base_output + mid,0,1));
             }
         }
         return;
