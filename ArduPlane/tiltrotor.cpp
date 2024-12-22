@@ -190,7 +190,7 @@ void Tiltrotor::slew(float newtilt)
         float T_Gain = float(RC_Channels::get_radio_in(CH_6) - 600);
         if (T_Gain < 0.0)
             T_Gain = 0.0;
-        T_Gain = T_Gain / 15000.0f;
+        T_Gain = T_Gain / 5000.0f;
         float rear_od_pcd = -od_pcd * T_Gain;
 
         float max_change = tilt_max_change(newtilt<current_tilt, newtilt > get_fully_forward_tilt());

@@ -18,7 +18,7 @@
 
 #include "AP_Proximity_config.h"
 
-#if AP_PROXIMITY_LIGHTWARE_SF45B_ENABLED
+//#if AP_PROXIMITY_LIGHTWARE_SF45B_ENABLED
 
 #include "AP_Proximity_LightWareSF45B.h"
 
@@ -203,4 +203,4 @@ uint8_t AP_Proximity_LightWareSF45B::convert_angle_to_minisector(float angle_deg
     return wrap_360(angle_deg + (PROXIMITY_SF45B_COMBINE_READINGS_DEG * 0.5f)) / PROXIMITY_SF45B_COMBINE_READINGS_DEG;
 }
 
-#endif // AP_PROXIMITY_LIGHTWARE_SF45B_ENABLED
+//#endif // AP_PROXIMITY_LIGHTWARE_SF45B_ENABLED
